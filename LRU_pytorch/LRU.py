@@ -89,15 +89,23 @@ class DeepLRU(nn.Module):
         r = nn.ModuleList(
             [LRU(in_features, out_features, state_features[j], rmin, rmax, max_phase) for j in range(N)])
         # Create a new ModuleList to store the modified modules
-        templist = nn.ModuleList()
+        self.templist = nn.ModuleList()
         # Loop through the module list, inserting the new module in between
         for i in range(len(r) - 1):
-            templist.append(r[i])
-            templist.append(mlp)  # Insert the new module in between
+            self.templist.append(r[i])
+            self.templist.append(mlp)  # Insert the new module in between
 
         # Append the last module from the original list
-        templist.append(r[-1])
+        self.templist.append(r[-1])
         # Append the final different module at the end
-        templist.append(MLP(out_features, mlp_hidden_size, out_features))
+        self.templist.append(MLP(out_features, mlp_hidden_size, out_features))
+        self.model = nn.Sequential(*self.templist)
+
+    def forward(self, input):
+        result = self.model(input)
+        return result
+
+
+
 
 
