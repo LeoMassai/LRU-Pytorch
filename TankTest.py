@@ -40,7 +40,6 @@ for j in range(nExp):
 seed = 1
 torch.manual_seed(seed)
 
-
 idd = 1
 hdd = 20
 ldd = 2
@@ -48,7 +47,8 @@ odd = yExp[0, 0].shape[0]
 
 RNN = DeepLRU(N=3,
               in_features=idd,
-              out_features=odd,
+              out_features = odd,
+              mid_features=11,
               state_features=hdd
               )
 

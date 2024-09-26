@@ -85,7 +85,7 @@ class LRU(nn.Module):
 
 
 class SSL(nn.Module):
-    def __init__(self, N, in_features, out_features, state_features, mlp_hidden_size=30, rmin=0.9, rmax=1,
+    def __init__(self, in_features, out_features, state_features, mlp_hidden_size=30, rmin=0.9, rmax=1,
                  max_phase=6.283):
         super().__init__()
         self.mlp = MLP(out_features, mlp_hidden_size, out_features)
@@ -97,8 +97,24 @@ class SSL(nn.Module):
         result = self.model(input) + self.lin(input)
         return result
 
-
 class DeepLRU(nn.Module):
+    def __init__(self, N, in_features, out_features, mid_features, state_features,  rmin=0.9, rmax=1,
+                 max_phase=6.283):
+        super().__init__()
+        self.linin = nn.Linear(in_features, mid_features)
+        self.linout = nn.Linear(mid_features, out_features)
+        self.modelt = nn.ModuleList(
+            [SSL(mid_features, mid_features, state_features, rmin, rmax, max_phase) for j in range(N)])
+        self.modelt.insert(0, self.linin)
+        self.modelt.append(self.linout)
+        self.model = nn.Sequential(*self.modelt)
+
+    def forward(self, input):
+        result = self.model(input)
+        return result
+
+
+class DeepLRU2(nn.Module):
     def __init__(self, N, in_features, out_features, state_features, mlp_hidden_size=30, rmin=0.9, rmax=1,
                  max_phase=6.283):
         super().__init__()
