@@ -10,24 +10,27 @@ class MLP(nn.Module):
         # Define the model using nn.Sequential
         self.model = nn.Sequential(
             nn.Linear(input_size, hidden_size),  # First layer
-            nn.Tanh(),  # Activation after the first layer
+            nn.ReLU(),  # Activation after the first layer
             nn.Linear(hidden_size, hidden_size),  # Hidden layer
-            nn.Tanh(),  # Activation after hidden layer
+            nn.ReLU(),  # Activation after hidden layer
             nn.Linear(hidden_size, output_size)  # Output layer (no activation)
         )
 
     def forward(self, x):
-        # x is of shape (batch_size, sequence_length, input_size)
-        batch_size, seq_length, input_size = x.size()
+        if x.dim() == 3:
+            # x is of shape (batch_size, sequence_length, input_size)
+            batch_size, seq_length, input_size = x.size()
 
-        # Flatten the batch and sequence dimensions to apply MLP across all elements
-        x = x.view(batch_size * seq_length, input_size)  # Shape: (batch_size * sequence_length, input_size)
+            # Flatten the batch and sequence dimensions to apply MLP across all elements
+            x = x.view(batch_size * seq_length, input_size)  # Shape: (batch_size * sequence_length, input_size)
 
-        # Apply the MLP to each feature vector
-        x = self.model(x)
+            # Apply the MLP to each feature vector
+            x = self.model(x)
 
-        # Reshape back to (batch_size, sequence_length, output_size)
-        x = x.view(batch_size, seq_length, -1)  # Shape: (batch_size, sequence_length, output_size)
+            # Reshape back to (batch_size, sequence_length, output_size)
+            x = x.view(batch_size, seq_length, -1)  # Shape: (batch_size, sequence_length, output_size)
+        else:
+            x = self.model(x)
 
         return x
 
@@ -51,8 +54,8 @@ class LRU(nn.Module):
         self.C = nn.Parameter(torch.complex(C_re, C_im))
         self.state = torch.complex(torch.zeros(state_features), torch.zeros(state_features))
 
-    def forward(self, input, state=None):
-        self.state = self.state.to(self.B.device) if state is None else state
+    def forward(self, input):
+        self.state = self.state.to(self.B.device)
         Lambda_mod = torch.exp(-torch.exp(self.nu_log))
         Lambda_re = Lambda_mod * torch.cos(torch.exp(self.theta_log))
         Lambda_im = Lambda_mod * torch.sin(torch.exp(self.theta_log))
@@ -81,6 +84,20 @@ class LRU(nn.Module):
         return output
 
 
+class SSL(nn.Module):
+    def __init__(self, N, in_features, out_features, state_features, mlp_hidden_size=30, rmin=0.9, rmax=1,
+                 max_phase=6.283):
+        super().__init__()
+        self.mlp = MLP(out_features, mlp_hidden_size, out_features)
+        self.LRU = LRU(in_features, out_features, state_features, rmin, rmax, max_phase)
+        self.model = nn.Sequential(self.LRU, self.mlp)
+        self.lin = nn.Linear(in_features, out_features)
+
+    def forward(self, input):
+        result = self.model(input) + self.lin(input)
+        return result
+
+
 class DeepLRU(nn.Module):
     def __init__(self, N, in_features, out_features, state_features, mlp_hidden_size=30, rmin=0.9, rmax=1,
                  max_phase=6.283):
@@ -104,10 +121,3 @@ class DeepLRU(nn.Module):
     def forward(self, input):
         result = self.model(input)
         return result
-
-
-
-
-
-
-

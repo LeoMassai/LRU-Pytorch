@@ -63,14 +63,13 @@ model = DeepLRU(N,
                 state_features=hidden_size
                 )
 
-
 # Define loss function and optimizer
 criterion = nn.MSELoss()
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 
 
 # Training loop
-def train_model(model, num_epochs=250, batch_size=16, seq_length=40, input_size=3):
+def train_model(model, num_epochs=100, batch_size=16, seq_length=40, input_size=3):
     model.train()
 
     for epoch in range(num_epochs):
@@ -122,4 +121,6 @@ def visualize_prediction(model, seq_length=40, input_size=3):
 # Visualize the model prediction on one example time series
 visualize_prediction(model)
 
-model(torch.randn([1,30]))
+a= model(torch.randn([4, 3]))
+
+
