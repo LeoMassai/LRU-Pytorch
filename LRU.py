@@ -97,14 +97,15 @@ class SSL(nn.Module):
         result = self.model(input) + self.lin(input)
         return result
 
+
 class DeepLRU(nn.Module):
-    def __init__(self, N, in_features, out_features, mid_features, state_features,  rmin=0.9, rmax=1,
+    def __init__(self, N, in_features, out_features, mid_features, state_features, rmin=0.9, rmax=1,
                  max_phase=6.283):
         super().__init__()
         self.linin = nn.Linear(in_features, mid_features)
         self.linout = nn.Linear(mid_features, out_features)
         self.modelt = nn.ModuleList(
-            [SSL(mid_features, mid_features, state_features, rmin, rmax, max_phase) for j in range(N)])
+            [SSL(mid_features, mid_features, state_features) for j in range(N)])
         self.modelt.insert(0, self.linin)
         self.modelt.append(self.linout)
         self.model = nn.Sequential(*self.modelt)
@@ -114,25 +115,30 @@ class DeepLRU(nn.Module):
         return result
 
 
+class SSL2(nn.Module):
+    def __init__(self, in_features, mid_features, out_features, state_features, rmin, rmax,
+                 max_phase):
+        super().__init__()
+        self.LRU = LRU(mid_features, mid_features, state_features, rmin, rmax, max_phase)
+        self.lin_in = nn.Linear(in_features, mid_features)
+        self.lin_out = nn.Linear(mid_features, out_features)
+        self.silu = nn.SiLU()
+
+    def forward(self, input):
+        result = self.lin_out(self.LRU(self.silu(self.lin_in(input))) + self.silu(self.lin_in(input)))
+        return result
+
+
 class DeepLRU2(nn.Module):
-    def __init__(self, N, in_features, out_features, state_features, mlp_hidden_size=30, rmin=0.9, rmax=1,
+    def __init__(self, N, in_features, out_features, mid_features, state_features, rmin=0.5, rmax=1,
                  max_phase=6.283):
         super().__init__()
-        mlp = MLP(out_features, mlp_hidden_size, in_features)
-        r = nn.ModuleList(
-            [LRU(in_features, out_features, state_features, rmin, rmax, max_phase) for j in range(N)])
-        # Create a new ModuleList to store the modified modules
-        self.templist = nn.ModuleList()
-        # Loop through the LRU module list, inserting the new MLP module in between
-        for i in range(len(r) - 1):
-            self.templist.append(r[i])
-            self.templist.append(mlp)  # Insert the new module in between
-
-        # Append the last module from the original list
-        self.templist.append(r[-1])
-        # Append the final different MLP module at the end
-        self.templist.append(MLP(out_features, mlp_hidden_size, out_features))
-        self.model = nn.Sequential(*self.templist)
+        self.linout = nn.Linear(in_features, out_features)
+        modelt = nn.ModuleList(
+            [SSL2(in_features, mid_features, in_features, state_features, rmin, rmax,
+                  max_phase) for j in range(N)])
+        modelt.append(self.linout)
+        self.model = nn.Sequential(*modelt)
 
     def forward(self, input):
         result = self.model(input)

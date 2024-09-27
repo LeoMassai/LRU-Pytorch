@@ -1,5 +1,5 @@
 import numpy as np
-from LRU import DeepLRU, LRU
+from LRU import DeepLRU2, LRU
 import math
 import matplotlib.pyplot as plt
 import scipy
@@ -45,12 +45,12 @@ hdd = 20
 ldd = 2
 odd = yExp[0, 0].shape[0]
 
-RNN = DeepLRU(N=3,
-              in_features=idd,
-              out_features = odd,
-              mid_features=11,
-              state_features=hdd
-              )
+RNN = DeepLRU2(N=2,
+               in_features=idd,
+               out_features=odd,
+               mid_features=11,
+               state_features=hdd
+               )
 
 total_params = sum(p.numel() for p in RNN.parameters())
 print(f"Number of parameters: {total_params}")
@@ -66,7 +66,7 @@ optimizer.zero_grad()
 
 t_end = yExp[0, 0].shape[1]
 
-epochs = 10
+epochs = 200
 LOSS = np.zeros(epochs)
 
 for epoch in range(epochs):
@@ -120,7 +120,7 @@ plt.show()
 
 plt.figure('10')
 plt.plot(yRNN_val[:, 0].detach().numpy(), label='REN val')
-plt.plot(yval[0, :, 0].detach().numpy(), label='y val')
+plt.plot(yval[:, 0].detach().numpy(), label='y val')
 plt.title("output 1 val single RNN")
 plt.legend()
 plt.show()
@@ -134,7 +134,7 @@ plt.show()
 
 plt.figure('12')
 plt.plot(yRNN_val[:, 1].detach().numpy(), label='REN val')
-plt.plot(yval[0, :, 1].detach().numpy(), label='y val')
+plt.plot(yval[:, 1].detach().numpy(), label='y val')
 plt.title("output 1 val single REN")
 plt.legend()
 plt.show()
@@ -148,7 +148,7 @@ plt.show()
 
 plt.figure('14')
 plt.plot(yRNN_val[:, 2].detach().numpy(), label='REN val')
-plt.plot(yval[0, :, 2].detach().numpy(), label='y val')
+plt.plot(yval[:, 2].detach().numpy(), label='y val')
 plt.title("output 1 val single RNN")
 plt.legend()
 plt.show()
