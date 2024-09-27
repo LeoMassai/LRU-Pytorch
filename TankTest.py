@@ -1,5 +1,5 @@
 import numpy as np
-from LRU import DeepLRU2, LRU
+from LRU import DeepLRU2, DeepLRU, LRU
 import math
 import matplotlib.pyplot as plt
 import scipy
@@ -45,7 +45,7 @@ hdd = 20
 ldd = 2
 odd = yExp[0, 0].shape[0]
 
-RNN = DeepLRU2(N=2,
+RNN = DeepLRU2(N=4,
                in_features=idd,
                out_features=odd,
                mid_features=11,
@@ -161,3 +161,4 @@ plt.show()
 # plt.show()
 
 print(f"Loss Validation single RNN: {loss_val}")
+

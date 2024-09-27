@@ -116,21 +116,23 @@ class DeepLRU(nn.Module):
 
 
 class SSL2(nn.Module):
-    def __init__(self, in_features, mid_features, out_features, state_features, rmin, rmax,
-                 max_phase):
+    def __init__(self, in_features, mid_features, out_features, state_features,  rmin, rmax,
+                 max_phase, mlp_hidden_size=30):
         super().__init__()
+        self.mlp = MLP(in_features, mlp_hidden_size, mid_features)
         self.LRU = LRU(mid_features, mid_features, state_features, rmin, rmax, max_phase)
+        self.model = nn.Sequential(self.mlp, self.LRU)
         self.lin_in = nn.Linear(in_features, mid_features)
         self.lin_out = nn.Linear(mid_features, out_features)
-        self.silu = nn.SiLU()
+        self.silu = nn.ReLU()
 
     def forward(self, input):
-        result = self.lin_out(self.LRU(self.silu(self.lin_in(input))) + self.silu(self.lin_in(input)))
+        result = self.lin_out(self.model(input) + self.silu(self.lin_in(input)))
         return result
 
 
 class DeepLRU2(nn.Module):
-    def __init__(self, N, in_features, out_features, mid_features, state_features, rmin=0.5, rmax=1,
+    def __init__(self, N, in_features, out_features, mid_features, state_features, rmin=0.9, rmax=1,
                  max_phase=6.283):
         super().__init__()
         self.linout = nn.Linear(in_features, out_features)

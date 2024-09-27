@@ -121,7 +121,7 @@ for j in range(nExp):
 
 # Get RNN output for validation data
 yRNN_val = RNN(uval)
-yRNN_val = yRNN_val.unsqueeze_(0)
+
 
 # Calculate loss for validation data
 loss_val = MSE(yRNN_val, yval)
